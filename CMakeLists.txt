@@ -19,7 +19,7 @@ set(IMGUI_SOURCES
 
 add_library(imgui STATIC ${IMGUI_SOURCES})
 
-target_include_directories(imgui PUBLIC lib/imgui lib/imgui/backends)
+target_include_directories(imgui PUBLIC include/imgui include/imgui/backends)
 
 link_directories(${CMAKE_SOURCE_DIR}/lib)
 
