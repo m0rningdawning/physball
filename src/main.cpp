@@ -1,9 +1,11 @@
+#include <ball.h>
+#include <iostream>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
-#include <iostream>
+#include "shader_util.h"
 
 const int WIDTH = 800;
 const int HEIGHT = 600;
@@ -44,6 +46,9 @@ int main()
 
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
+    // Shader build and compilation
+    GLuint ball_shader_prog = ShaderUtil::create_shader("../src/ball/ball_vert.glsl", "../src/ball/ball_frag.glsl");
+
     // Imgui setup
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -54,6 +59,9 @@ int main()
     ImGui_ImplOpenGL3_Init("#version 330");
 
     ImGui::StyleColorsDark();
+
+    // Ball
+    const Ball ball(0.0f, 0.0f, 0.5f);
 
     while (!glfwWindowShouldClose(window))
     {
@@ -71,6 +79,13 @@ int main()
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+        // The ball
+        glUseProgram(ball_shader_prog);
+
+        const GLint color_loc = glGetUniformLocation(ball_shader_prog, "ballColor");
+        glUniform3f(color_loc, 1.0f, 0.0f, 0.0f);
+        ball.display(color_loc);
 
         glfwSwapBuffers(window);
     }
