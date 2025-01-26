@@ -1,5 +1,6 @@
 #include <ball.h>
 #include <iostream>
+#include <vector>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include "imgui.h"
@@ -46,8 +47,35 @@ int main()
 
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
+    // Ball
+    const Ball ball(0.0f, 0.0f, 0.5f);
+
     // Shader build and compilation
     GLuint ball_shader_prog = ShaderUtil::create_shader("../src/ball/ball_vert.glsl", "../src/ball/ball_frag.glsl");
+
+    std::vector<float> vertices;
+    for (int i = 0; i <= 360; i += 10)
+    {
+        const float angle = i * 3.14159f / 180.0f;
+        vertices.push_back(ball.pos_x + ball.rad * cos(angle));
+        vertices.push_back(ball.pos_y + ball.rad * sin(angle));
+    }
+
+    // VAO and VBO
+    GLuint VAO, VBO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 
     // Imgui setup
     IMGUI_CHECKVERSION();
@@ -59,9 +87,6 @@ int main()
     ImGui_ImplOpenGL3_Init("#version 330");
 
     ImGui::StyleColorsDark();
-
-    // Ball
-    const Ball ball(0.0f, 0.0f, 0.5f);
 
     while (!glfwWindowShouldClose(window))
     {
@@ -82,9 +107,11 @@ int main()
 
         // The ball
         glUseProgram(ball_shader_prog);
+        glBindVertexArray(VAO);
 
         const GLint color_loc = glGetUniformLocation(ball_shader_prog, "ballColor");
         glUniform3f(color_loc, 1.0f, 0.0f, 0.0f);
+        // glDrawArrays(GL_TRIANGLE_FAN, 0, vertices.size() / 2);
         ball.display(color_loc);
 
         glfwSwapBuffers(window);
@@ -95,8 +122,14 @@ int main()
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 
+    // Everything else cleanup
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteProgram(ball_shader_prog);
+
     glfwDestroyWindow(window);
     glfwTerminate();
+
 
     return 0;
 }
