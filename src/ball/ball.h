@@ -8,7 +8,7 @@ public:
     float pos_x, pos_y, vel_x, vel_y, rad;
     Ball(float pos_x, float pos_y, float rad);
     void update(float delta, float g, float elast);
-    void display(GLint color_loc) const;
+    void display(GLuint v_count) const;
 };
 
 #endif

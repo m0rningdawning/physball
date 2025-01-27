@@ -20,8 +20,7 @@ void Ball::update(float delta, float g, float elast)
     }
 }
 
-void Ball::display(GLint color_loc) const
+void Ball::display(GLuint v_count) const
 {
-    // glUniform3f(color_loc, 1.0f, 0.0f, 0.0f);
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 37);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, v_count);
 }
