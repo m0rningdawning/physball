@@ -1,4 +1,3 @@
-#include <ball.h>
 #include <iostream>
 #include <vector>
 #include <glad/glad.h>
@@ -8,6 +7,26 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include "shader_util.h"
+#include "ball.h"
+
+/*
+ * TODO:
+ * - Reformat and clean the code
+ * Current focus:
+ * - Add the ground
+ * - Enable gravity and simulate collision with the ground
+ * Near future:
+ * - Add more balls
+ * - Add proper collision with other balls
+ * - Add directed forces
+ * - Add elasticity properties to the ground
+ * - Improve rendering to add more shapes
+ * Far future:
+ * - Switch to 3D
+ * - Improve 3D render to support more models
+ * - Simulate materials and their influence on one another
+ * - Simulate shatter and other events
+ */
 
 constexpr int WIDTH = 800;
 constexpr int HEIGHT = 600;
@@ -16,11 +35,10 @@ std::vector<float> verts;
 
 GLuint VAO, VBO;
 
-void regenerate_vertices(const Ball& ball, float win_r)
-{
+void regenerate_vertices(const Ball& ball, float win_r) {
     verts.clear();
-    for (int i = 0; i <= 360; i += 10)
-    {
+
+    for (int i = 0; i <= 360; i += 10) {
         float angle = static_cast<float>(i) * 3.14159f / 180.0f;
         float ndc_x = ball.rad * cos(angle) / win_r;
         float ndc_y = ball.rad * sin(angle);
@@ -33,18 +51,15 @@ void regenerate_vertices(const Ball& ball, float win_r)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 
     float aspect_ratio = static_cast<float>(width) / static_cast<float>(height);
     regenerate_vertices(*static_cast<Ball*>(glfwGetWindowUserPointer(window)), aspect_ratio);
 }
 
-int main()
-{
-    if (!glfwInit())
-    {
+int main() {
+    if (!glfwInit()) {
         std::cerr << "Failed to initialize GLFW" << std::endl;
         return -1;
     }
@@ -56,16 +71,14 @@ int main()
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "PhysBall", nullptr, nullptr);
-    if (!window)
-    {
+    if (!window) {
         std::cerr << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
         return -1;
     }
     glfwMakeContextCurrent(window);
 
-    if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress)))
-    {
+    if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
         std::cerr << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
@@ -77,8 +90,7 @@ int main()
     glfwSetWindowUserPointer(window, &ball);
 
     // Ball color struct
-    struct ball_color_struct
-    {
+    struct ball_color_struct {
         float color[3]{1.0f, 0.0f, 0.0f};
         bool is_rgb = false;
         float rgb_inc = 0.0001f;
@@ -117,8 +129,7 @@ int main()
 
     ImGui::StyleColorsDark();
 
-    while (!glfwWindowShouldClose(window))
-    {
+    while (!glfwWindowShouldClose(window)) {
         GLint win_w, win_h;
         glfwGetFramebufferSize(window, &win_w, &win_h);
         float win_r = static_cast<float>(win_w) / static_cast<float>(win_h);
@@ -132,36 +143,31 @@ int main()
         glUseProgram(ball_shader_prog);
         glBindVertexArray(VAO);
 
-        if (ball_color.is_rgb)
-        {
-            switch (ball_color.curr_rgb)
-            {
+        if (ball_color.is_rgb) {
+            if (ball_color.rgb_inc < 0.0f || ball_color.rgb_inc > 0.01f) {
+                ball_color.rgb_inc = 0.0f;
+            }
+
+            switch (ball_color.curr_rgb) {
             case 0:
-                if (ball_color.color[0] <= 1.0f)
-                {
+                if (ball_color.color[0] <= 1.0f) {
                     ball_color.color[0] += ball_color.rgb_inc;
                 }
-                else
-                {
-                    if (ball_color.color[2] > 0.0f)
-                    {
+                else {
+                    if (ball_color.color[2] > 0.0f) {
                         ball_color.color[2] -= ball_color.rgb_inc;
                     }
-                    else
-                    {
+                    else {
                         ball_color.curr_rgb = 1;
                     }
                 }
                 break;
             case 1:
-                if (ball_color.color[1] <= 1.0f)
-                {
+                if (ball_color.color[1] <= 1.0f) {
                     ball_color.color[1] += ball_color.rgb_inc;
                 }
-                else
-                {
-                    if (ball_color.color[0] > 0.0f)
-                    {
+                else {
+                    if (ball_color.color[0] > 0.0f) {
                         ball_color.color[0] -= ball_color.rgb_inc;
                     }
                     else
@@ -169,14 +175,11 @@ int main()
                 }
                 break;
             case 2:
-                if (ball_color.color[2] <= 1.0f)
-                {
+                if (ball_color.color[2] <= 1.0f) {
                     ball_color.color[2] += ball_color.rgb_inc;
                 }
-                else
-                {
-                    if (ball_color.color[1] > 0.0f)
-                    {
+                else {
+                    if (ball_color.color[1] > 0.0f) {
                         ball_color.color[1] -= ball_color.rgb_inc;
                     }
                     else
@@ -212,8 +215,7 @@ int main()
         ImGui::End();
 
         ImGui::Begin("Ball Size");
-        if (ImGui::SliderFloat("Radius", &ball.rad, 0.01f, 1.0f))
-        {
+        if (ImGui::SliderFloat("Radius", &ball.rad, 0.01f, 1.0f)) {
             regenerate_vertices(ball, win_r);
         }
         ImGui::End();

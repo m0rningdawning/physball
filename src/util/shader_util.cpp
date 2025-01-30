@@ -3,11 +3,9 @@
 #include <sstream>
 #include "shader_util.h"
 
-std::string ShaderUtil::load_shader(const char* path)
-{
+std::string ShaderUtil::load_shader(const char* path) {
     const std::ifstream file(path);
-    if (!file.is_open())
-    {
+    if (!file.is_open()) {
         std::cerr << "Failed to open shader file: " << path << std::endl;
         return "";
     }
@@ -18,16 +16,13 @@ std::string ShaderUtil::load_shader(const char* path)
     return source;
 }
 
-GLuint ShaderUtil::compile_shader(const GLenum type, const char* source)
-{
+GLuint ShaderUtil::compile_shader(const GLenum type, const char* source) {
     const GLuint shader = glCreateShader(type);
     glShaderSource(shader, 1, &source, nullptr);
     glCompileShader(shader);
-
     GLint success;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
+    if (!success) {
         char info[512];
         glGetShaderInfoLog(shader, 512, nullptr, info);
         std::cerr << "ERROR::SHADER::COMPILATION_FAILED\n" << info << std::endl;
@@ -35,8 +30,7 @@ GLuint ShaderUtil::compile_shader(const GLenum type, const char* source)
     return shader;
 }
 
-GLuint ShaderUtil::create_shader(const char* vert_path, const char* frag_path)
-{
+GLuint ShaderUtil::create_shader(const char* vert_path, const char* frag_path) {
     const std::string vert_c = load_shader(vert_path);
     const std::string frag_c = load_shader(frag_path);
 
@@ -50,8 +44,7 @@ GLuint ShaderUtil::create_shader(const char* vert_path, const char* frag_path)
 
     GLint success;
     glGetProgramiv(shader_prog, GL_LINK_STATUS, &success);
-    if (!success)
-    {
+    if (!success) {
         char infoLog[512];
         glGetProgramInfoLog(shader_prog, 512, nullptr, infoLog);
         std::cerr << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;

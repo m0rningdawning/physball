@@ -4,7 +4,6 @@ out vec4 FragColor;
 
 uniform vec3 ball_col;
 
-void main()
-{
+void main() {
     FragColor = vec4(ball_col, 1.0);
 }

@@ -3,8 +3,7 @@
 #include <glad/glad.h>
 #include <string>
 
-class ShaderUtil
-{
+class ShaderUtil {
 public:
     static std::string load_shader(const char* path);
     static GLuint compile_shader(GLenum type, const char* source);
