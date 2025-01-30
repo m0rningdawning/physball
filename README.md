@@ -3,3 +3,4 @@ A little gravity and impulse simulation applicaiton written in C++. Uses OpenGL 
 ## Tech Stack
 - OpenGL 3.3
 - GLFW
+- GLM

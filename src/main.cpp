@@ -76,8 +76,14 @@ int main()
     Ball ball(0.0f, 0.0f, 0.5f);
     glfwSetWindowUserPointer(window, &ball);
 
-    // Color array
-    float ball_color[3]{1.0f, 0.0f, 0.0f};
+    // Ball color struct
+    struct ball_color_struct
+    {
+        float color[3]{1.0f, 0.0f, 0.0f};
+        bool is_rgb = false;
+        float rgb_inc = 0.0001f;
+        int curr_rgb = 1;
+    } ball_color;
 
     // Shader build and compilation
     GLuint ball_shader_prog = ShaderUtil::create_shader("../src/ball/ball_vert.glsl", "../src/ball/ball_frag.glsl");
@@ -126,7 +132,64 @@ int main()
         glUseProgram(ball_shader_prog);
         glBindVertexArray(VAO);
 
-        glUniform3f(ball_col_loc, ball_color[0], ball_color[1], ball_color[2]);
+        if (ball_color.is_rgb)
+        {
+            switch (ball_color.curr_rgb)
+            {
+            case 0:
+                if (ball_color.color[0] <= 1.0f)
+                {
+                    ball_color.color[0] += ball_color.rgb_inc;
+                }
+                else
+                {
+                    if (ball_color.color[2] > 0.0f)
+                    {
+                        ball_color.color[2] -= ball_color.rgb_inc;
+                    }
+                    else
+                    {
+                        ball_color.curr_rgb = 1;
+                    }
+                }
+                break;
+            case 1:
+                if (ball_color.color[1] <= 1.0f)
+                {
+                    ball_color.color[1] += ball_color.rgb_inc;
+                }
+                else
+                {
+                    if (ball_color.color[0] > 0.0f)
+                    {
+                        ball_color.color[0] -= ball_color.rgb_inc;
+                    }
+                    else
+                        ball_color.curr_rgb = 2;
+                }
+                break;
+            case 2:
+                if (ball_color.color[2] <= 1.0f)
+                {
+                    ball_color.color[2] += ball_color.rgb_inc;
+                }
+                else
+                {
+                    if (ball_color.color[1] > 0.0f)
+                    {
+                        ball_color.color[1] -= ball_color.rgb_inc;
+                    }
+                    else
+                        ball_color.curr_rgb = 0;
+                }
+                break;
+            default:
+                break;
+            }
+        }
+
+        glUniform3f(ball_col_loc, ball_color.color[0], ball_color.color[1], ball_color.color[2]);
+
         glUniform1f(win_r_loc, win_r);
 
         ball.display(verts.size() / 2);
@@ -143,7 +206,9 @@ int main()
         ImGui::End();
 
         ImGui::Begin("Ball Color");
-        ImGui::ColorEdit3("Color", ball_color);
+        ImGui::ColorEdit3("Color", ball_color.color);
+        ImGui::Checkbox("RGB Color Wave", &ball_color.is_rgb);
+        ImGui::InputFloat("Color Wave Speed", &ball_color.rgb_inc, 0.0001f, 0.001f, "%.4f");
         ImGui::End();
 
         ImGui::Begin("Ball Size");
