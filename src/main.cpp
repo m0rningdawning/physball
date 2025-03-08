@@ -1,4 +1,5 @@
 #include <iostream>
+#include <thread>
 #include <vector>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -7,11 +8,12 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include "shader_util.h"
-#include "ball.h"
+#include "entities/ball/ball.h"
 
 /*
  * TODO:
  * - Reformat and clean the code
+ * - Reformat the constants from the upper case to the proper convention.
  * Current focus:
  * - Add the ground
  * - Enable gravity and simulate collision with the ground
@@ -30,6 +32,9 @@
 
 constexpr int WIDTH = 800;
 constexpr int HEIGHT = 600;
+constexpr float GRAVITY = -9.8f;
+constexpr float ELASTICITY = 0.8f;
+constexpr double FRAME_TIME = 1.0 / 144.0;
 
 std::vector<float> verts;
 
@@ -98,7 +103,8 @@ int main() {
     } ball_color;
 
     // Shader build and compilation
-    GLuint ball_shader_prog = ShaderUtil::create_shader("../src/ball/ball_vert.glsl", "../src/ball/ball_frag.glsl");
+    GLuint ball_shader_prog = ShaderUtil::create_shader("../src/entities/ball/ball_vert.glsl",
+                                                        "../src/entities/ball/ball_frag.glsl");
 
     // VAO and VBO
     glGenVertexArrays(1, &VAO);
@@ -129,7 +135,21 @@ int main() {
 
     ImGui::StyleColorsDark();
 
+    // Init time
+    GLdouble l_time = glfwGetTime();
+
     while (!glfwWindowShouldClose(window)) {
+        GLdouble c_time = glfwGetTime();
+        GLfloat d_time = static_cast<GLfloat>(c_time - l_time);
+
+        if (d_time < FRAME_TIME) {
+            std::this_thread::sleep_for(std::chrono::duration<double>(FRAME_TIME - d_time));
+            c_time = glfwGetTime();
+            d_time = static_cast<float>(c_time - l_time);
+        }
+
+        l_time = c_time;
+
         GLint win_w, win_h;
         glfwGetFramebufferSize(window, &win_w, &win_h);
         float win_r = static_cast<float>(win_w) / static_cast<float>(win_h);
@@ -195,6 +215,9 @@ int main() {
 
         glUniform1f(win_r_loc, win_r);
 
+        // Ball display and move
+        ball.update(d_time, GRAVITY, ELASTICITY);
+        regenerate_vertices(ball, win_r);
         ball.display(verts.size() / 2);
 
         // ImGui shenanigans

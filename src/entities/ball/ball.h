@@ -4,8 +4,12 @@
 
 class Ball {
 public:
-    float pos_x, pos_y, vel_x, vel_y, rad;
+    float pos_x, pos_y;
+    float vel_x, vel_y;
+    float rad;
+
     Ball(float pos_x, float pos_y, float rad);
+
     void update(float delta, float g, float elast);
     void display(GLuint v_count) const;
 };

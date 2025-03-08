@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.10)
 project(physball)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 # Include dirs
 include_directories(
         ${CMAKE_SOURCE_DIR}/include
-        ${CMAKE_SOURCE_DIR}/src/ball
+        ${CMAKE_SOURCE_DIR}/src/entities
         ${CMAKE_SOURCE_DIR}/src/util
 )
 
@@ -31,7 +31,8 @@ link_directories(${CMAKE_SOURCE_DIR}/lib)
 # Source files
 file(
         GLOB SOURCES ${CMAKE_SOURCE_DIR}/src/*.cpp
-        GLOB SOURCES ${CMAKE_SOURCE_DIR}/src/ball/*.cpp
+        GLOB SOURCES ${CMAKE_SOURCE_DIR}/src/entities/ball/*.cpp
+        GLOB SOURCES ${CMAKE_SOURCE_DIR}/src/entities/floor/*.cpp
         GLOB SOURCES ${CMAKE_SOURCE_DIR}/src/util/*.cpp
         ${CMAKE_SOURCE_DIR}/lib/glad.c
 )
