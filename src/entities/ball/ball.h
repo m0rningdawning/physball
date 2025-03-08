@@ -7,6 +7,7 @@ public:
     float pos_x, pos_y;
     float vel_x, vel_y;
     float rad;
+    bool is_dragged;
 
     Ball(float pos_x, float pos_y, float rad);
 

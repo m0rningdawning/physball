@@ -15,6 +15,21 @@ void Ball::update(float delta, float g, float elast) {
         pos_y = -1.0f + rad;
         vel_y = -vel_y * elast;
     }
+
+    if (pos_x - rad < -1.0f) {
+        pos_x = -1.0f + rad;
+        vel_x = -vel_x * elast;
+    }
+
+    if (pos_x + rad > 1.0f) {
+        pos_x = 1.0f - rad;
+        vel_x = -vel_x * elast;
+    }
+
+    if (pos_y + rad > 1.0f) {
+        pos_y = 1.0f - rad;
+        vel_y = -vel_y * elast;
+    }
 }
 
 void Ball::display(GLuint v_count) const {

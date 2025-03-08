@@ -12,7 +12,9 @@
 
 /*
  * TODO:
- * - Reformat and clean the code
+ * - Reformat and clean the code:
+ *      -- Split the code into the logic and gfx rendering parts.
+ *      -- Reformat GL related veriables to use GL datatypes e.g (GLint)
  * - Reformat the constants from the upper case to the proper convention.
  * Current focus:
  * - Add the ground
@@ -30,12 +32,19 @@
  * - Simulate shatter and other events
  */
 
+// Simulation and window parameters
 constexpr int WIDTH = 800;
 constexpr int HEIGHT = 600;
 constexpr float GRAVITY = -9.8f;
 constexpr float ELASTICITY = 0.8f;
 constexpr double FRAME_TIME = 1.0 / 144.0;
 
+// Mouse drag parameters (Rewrite as well
+bool is_dragging = false;
+float drg_offset_x = 0.0f;
+float drg_offset_y = 0.0f;
+
+// Vertices for the ball (Should rewrite)
 std::vector<float> verts;
 
 GLuint VAO, VBO;
@@ -61,6 +70,52 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 
     float aspect_ratio = static_cast<float>(width) / static_cast<float>(height);
     regenerate_vertices(*static_cast<Ball*>(glfwGetWindowUserPointer(window)), aspect_ratio);
+}
+
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+    Ball* ball = static_cast<Ball*>(glfwGetWindowUserPointer(window));
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+        double x_pos, y_pos;
+        glfwGetCursorPos(window, &x_pos, &y_pos);
+
+        int width, height;
+        glfwGetWindowSize(window, &width, &height);
+
+        float ndc_x = (2.0f * x_pos) / width - 1.0f;
+        float ndc_y = 1.0f - (2.0f * y_pos) / height;
+
+        float dx = ndc_x - ball->pos_x;
+        float dy = ndc_y - ball->pos_y;
+
+        if (dx * dx + dy * dy <= ball->rad * ball->rad) {
+            is_dragging = true;
+            drg_offset_x = dx;
+            drg_offset_y = dy;
+            ball->vel_x = 0.0f;
+            ball->vel_y = 0.0f;
+            ball->is_dragged = true;
+        }
+    }
+    else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
+        is_dragging = false;
+        ball->is_dragged = false;
+    }
+}
+
+void cursor_pos_callback(GLFWwindow* window, double xpos, double ypos) {
+    if (is_dragging) {
+        int width, height;
+        glfwGetWindowSize(window, &width, &height);
+
+        float ndc_x = (2.0f * xpos) / width - 1.0f;
+        float ndc_y = 1.0f - (2.0f * ypos) / height;
+
+        Ball* ball = static_cast<Ball*>(glfwGetWindowUserPointer(window));
+        ball->pos_x = ndc_x - drg_offset_x;
+        ball->pos_y = ndc_y - drg_offset_y;
+        ball->vel_x = 0.0f;
+        ball->vel_y = 0.0f;
+    }
 }
 
 int main() {
@@ -89,6 +144,10 @@ int main() {
     }
 
     glViewport(0, 0, WIDTH, HEIGHT);
+
+    // Mouse click callbacks
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
+    glfwSetCursorPosCallback(window, cursor_pos_callback);
 
     // Ball
     Ball ball(0.0f, 0.0f, 0.5f);
@@ -150,6 +209,22 @@ int main() {
 
         l_time = c_time;
 
+        // Ball pos update if dragging
+        if (is_dragging) {
+            double x_pos, y_pos;
+            glfwGetCursorPos(window, &x_pos, &y_pos);
+
+            int width, height;
+            glfwGetWindowSize(window, &width, &height);
+
+            float ndc_x = (2.0f * x_pos) / width - 1.0f;
+            float ndc_y = 1.0f - (2.0f * y_pos) / height;
+
+            ball.pos_x = ndc_x - drg_offset_x;
+            ball.pos_y = ndc_y - drg_offset_y;
+        }
+
+        // Window shenanigans
         GLint win_w, win_h;
         glfwGetFramebufferSize(window, &win_w, &win_h);
         float win_r = static_cast<float>(win_w) / static_cast<float>(win_h);
