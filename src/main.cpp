@@ -12,24 +12,26 @@
 
 /*
  * TODO:
- * - Reformat and clean the code:
+ *  - Fix the ball rendering to use the proper ball position and radius
+ *  - Fix collisions (add proper collisions)
+ *  - Reformat and clean the code:
  *      -- Split the code into the logic and gfx rendering parts.
  *      -- Reformat GL related veriables to use GL datatypes e.g (GLint)
- * - Reformat the constants from the upper case to the proper convention.
- * Current focus:
- * - Add the ground
- * - Enable gravity and simulate collision with the ground
- * Near future:
- * - Add more balls
- * - Add proper collision with other balls
- * - Add directed forces
- * - Add elasticity properties to the ground
- * - Improve rendering to add more shapes
- * Far future:
- * - Switch to 3D
- * - Improve 3D render to support more models
- * - Simulate materials and their influence on one another
- * - Simulate shatter and other events
+ *  - Reformat the constants from the upper case to the proper convention.
+ *    === Current focus: ===
+ *  - Add the ground
+ *  - Enable gravity and simulate collision with the ground
+ *    === Near future: ===
+ *  - Add more balls
+ *  - Add proper collision with other balls
+ *  - Add directed forces
+ *  - Add elasticity properties to the ground
+ *  - Improve rendering to add more shapes
+ *    === Far future: ===
+ *  - Switch to 3D
+ *  - Improve 3D render to support more models
+ *  - Simulate materials and their influence on one another
+ *  - Simulate shatter and other events
  */
 
 // Simulation and window parameters
