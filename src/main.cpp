@@ -37,9 +37,11 @@ constexpr int WIDTH = 800;
 constexpr int HEIGHT = 600;
 constexpr float GRAVITY = -9.8f;
 constexpr float ELASTICITY = 0.8f;
+constexpr float FRICTION = 1.0f;
 constexpr double FRAME_TIME = 1.0 / 144.0;
 
 // Mouse drag parameters (Rewrite as well
+constexpr float THROW_SPEED_MULTIPLIER = 5.0f;
 bool is_dragging = false;
 float drg_offset_x = 0.0f;
 float drg_offset_y = 0.0f;
@@ -54,7 +56,7 @@ void regenerate_vertices(const Ball& ball, float win_r) {
 
     for (int i = 0; i <= 360; i += 10) {
         float angle = static_cast<float>(i) * 3.14159f / 180.0f;
-        float ndc_x = ball.rad * cos(angle) / win_r;
+        float ndc_x = ball.rad * cos(angle);
         float ndc_y = ball.rad * sin(angle);
         verts.push_back(ball.pos_x + ndc_x);
         verts.push_back(ball.pos_y + ndc_y);
@@ -65,6 +67,20 @@ void regenerate_vertices(const Ball& ball, float win_r) {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
+// void regenerate_vertices(const Ball& ball, float /*unused_win_r*/) {
+//     verts.clear();
+//     for (int i = 0; i <= 360; i += 10) {
+//         float angle = static_cast<float>(i) * 3.14159f / 180.0f;
+//         float x = cos(angle);  // no ball position or radius here
+//         float y = sin(angle);
+//         verts.push_back(x);
+//         verts.push_back(y);
+//     }
+//     glBindBuffer(GL_ARRAY_BUFFER, VBO);
+//     glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_STATIC_DRAW);
+//     glBindBuffer(GL_ARRAY_BUFFER, 0);
+// }
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 
@@ -73,32 +89,45 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 }
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+    static double initial_x_pos, initial_y_pos;
     Ball* ball = static_cast<Ball*>(glfwGetWindowUserPointer(window));
+
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-        double x_pos, y_pos;
-        glfwGetCursorPos(window, &x_pos, &y_pos);
+        glfwGetCursorPos(window, &initial_x_pos, &initial_y_pos);
 
         int width, height;
         glfwGetWindowSize(window, &width, &height);
 
-        float ndc_x = (2.0f * x_pos) / width - 1.0f;
-        float ndc_y = 1.0f - (2.0f * y_pos) / height;
+        float ndc_x = (2.0f * initial_x_pos) / width - 1.0f;
+        float ndc_y = 1.0f - (2.0f * initial_y_pos) / height;
 
-        float dx = ndc_x - ball->pos_x;
-        float dy = ndc_y - ball->pos_y;
+        float distance_x = ndc_x - ball->pos_x;
+        float distance_y = ndc_y - ball->pos_y;
+        float distance = sqrt(distance_x * distance_x + distance_y * distance_y);
 
-        if (dx * dx + dy * dy <= ball->rad * ball->rad) {
+        if (distance <= ball->rad) {
             is_dragging = true;
-            drg_offset_x = dx;
-            drg_offset_y = dy;
-            ball->vel_x = 0.0f;
-            ball->vel_y = 0.0f;
-            ball->is_dragged = true;
+            drg_offset_x = distance_x;
+            drg_offset_y = distance_y;
         }
     }
-    else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
+
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
         is_dragging = false;
-        ball->is_dragged = false;
+        double release_x_pos, release_y_pos;
+        glfwGetCursorPos(window, &release_x_pos, &release_y_pos);
+
+        int width, height;
+        glfwGetWindowSize(window, &width, &height);
+
+        float ndc_x = (2.0f * release_x_pos) / width - 1.0f;
+        float ndc_y = 1.0f - (2.0f * release_y_pos) / height;
+
+        float distance_x = ndc_x - (initial_x_pos * 2.0f / width - 1.0f);
+        float distance_y = ndc_y - (1.0f - initial_y_pos * 2.0f / height);
+
+        ball->vel_x = distance_x * THROW_SPEED_MULTIPLIER;
+        ball->vel_y = distance_y * THROW_SPEED_MULTIPLIER;
     }
 }
 
@@ -233,8 +262,14 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT);
 
         // The ball
+        // const GLint ball_col_loc = glGetUniformLocation(ball_shader_prog, "ball_col");
+        // const GLint win_r_loc = glGetUniformLocation(ball_shader_prog, "win_r");
+
         const GLint ball_col_loc = glGetUniformLocation(ball_shader_prog, "ball_col");
         const GLint win_r_loc = glGetUniformLocation(ball_shader_prog, "win_r");
+        // const GLint ball_pos_loc = glGetUniformLocation(ball_shader_prog, "ballPos");
+        // const GLint ball_rad_loc = glGetUniformLocation(ball_shader_prog, "ballRad");
+
         glUseProgram(ball_shader_prog);
         glBindVertexArray(VAO);
 
@@ -286,12 +321,16 @@ int main() {
             }
         }
 
-        glUniform3f(ball_col_loc, ball_color.color[0], ball_color.color[1], ball_color.color[2]);
+        // glUniform3f(ball_col_loc, ball_color.color[0], ball_color.color[1], ball_color.color[2]);
+        // glUniform1f(win_r_loc, win_r);
+        // glUniform2f(ball_pos_loc, ball.pos_x, ball.pos_y);
+        // glUniform1f(ball_rad_loc, ball.rad);
 
+        glUniform3f(ball_col_loc, ball_color.color[0], ball_color.color[1], ball_color.color[2]);
         glUniform1f(win_r_loc, win_r);
 
         // Ball display and move
-        ball.update(d_time, GRAVITY, ELASTICITY);
+        ball.update(d_time, GRAVITY, ELASTICITY, FRICTION);
         regenerate_vertices(ball, win_r);
         ball.display(verts.size() / 2);
 

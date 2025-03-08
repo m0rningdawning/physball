@@ -11,7 +11,7 @@ public:
 
     Ball(float pos_x, float pos_y, float rad);
 
-    void update(float delta, float g, float elast);
+    void update(float delta, float g, float elast, float friction);
     void display(GLuint v_count) const;
 };
 
