@@ -14,9 +14,10 @@
  * TODO:
  *  - Fix the ball rendering to use the proper ball position and radius
  *  - Fix collisions (add proper collisions)
+ *  - Add real time physical parameter tweaking
  *  - Reformat and clean the code:
  *      -- Split the code into the logic and gfx rendering parts.
- *      -- Reformat GL related veriables to use GL datatypes e.g (GLint)
+ *      -- Reformat GL related variables to use GL datatypes e.g (GLint)
  *  - Reformat the constants from the upper case to the proper convention.
  *    === Current focus: ===
  *  - Add the ground
